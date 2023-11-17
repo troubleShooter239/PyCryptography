@@ -95,7 +95,7 @@ class Vigenere(CryptBase):
             for i, c in enumerate(msg)
         )
 ####################################################################
-FIX BIGRAMS!
+FIX BIGRAMS! 
 ####################################################################
 class Playfer(CryptBase):
     def __init__(self,
