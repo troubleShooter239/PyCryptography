@@ -5,62 +5,196 @@ from crypt_base import CryptBase
 
 
 class Caesar(CryptBase):
-    def __init__(self, 
-                 shift: int = 0):
-        self.shift = shift
+    """
+    Implementation of the Caesar cipher.
 
+    Attributes:
+        _shift (int): The shift value used for encryption and decryption.
+
+    Methods:
+        __init__(self, shift: int = 0) -> None:
+            Initializes an instance of the Caesar class.
+            
+            Raises:
+                ValueError: If the input shift is not a int.
+
+        encrypt(self, msg: str) -> str:
+            Encrypts a message using the Caesar cipher.
+
+            Args:
+                msg (str): The message to be encrypted.
+
+            Returns:
+                str: The encrypted message.
+
+            Raises:
+                ValueError: If the input message is not a string.
+
+        decrypt(self, msg: str) -> str:
+            Decrypts a message encrypted with the Caesar cipher.
+
+            Args:
+                msg (str): The message to be decrypted.
+
+            Returns:
+                str: The decrypted message.
+
+            Raises:
+                ValueError: If the input message is not a string.
+    """
+    def __init__(self, 
+                 shift: int = 0) -> None:
+        """
+        Initializes an instance of the Caesar class.
+
+        Args:
+            shift (int): The initial shift value.
+        """
+        if not isinstance(shift, int):
+            raise ValueError("Shift must be of type int!")
+        self._shift = shift
+    
+    @property
+    def shift(self) -> int:
+        """
+        Get the current shift value.
+
+        Returns:
+            int: The current shift value.
+        """
+        return self._shift
+    
+    @shift.setter
+    def shift(self, value: int) -> None:
+        """
+        Set the shift value.
+
+        Args:
+            value (int): The new shift value.
+
+        Raises:
+            ValueError: If the value is not an integer.
+        """
+        if not isinstance(value, int):
+            raise ValueError("Shift value must be of type int.")
+        self._shift = value
+    
     def encrypt(self, msg: str) -> str:
+        """
+        Encrypts a message using the Caesar cipher.
+
+        Args:
+            msg (str): The message to be encrypted.
+
+        Returns:
+            str: The encrypted message.
+
+        Raises:
+            ValueError: If the input message is not a string.
+        """
+        if not isinstance(msg, str):
+            raise ValueError("Input message must be a string.")
+        msg = msg.upper()
         return ''.join(
-            chr((ord(char) + self.shift - ord('A')) % 26 + ord('A')) 
+            chr((ord(char) + self._shift - ord('A')) % 26 + ord('A')) 
             if 'A' <= char <= 'Z' else char for char in msg
         )
 
     def decrypt(self, msg: str) -> str:
+        """
+        Decrypts a message encrypted with the Caesar cipher.
+
+        Args:
+            msg (str): The message to be decrypted.
+
+        Returns:
+            str: The decrypted message.
+
+        Raises:
+            ValueError: If the input message is not a string.
+        """
+        if not isinstance(msg, str):
+            raise ValueError("Input message must be a string.")
+        msg = msg.upper()
         return ''.join(
-            chr((ord(char) - self.shift - ord('A')) % 26 + ord('A')) 
+            chr((ord(char) - self._shift - ord('A')) % 26 + ord('A')) 
             if 'A' <= char <= 'Z' else char for char in msg
         )
 
 
 class PolybiusSquare(CryptBase):
     def __init__(self, 
-                 table: Optional[list] = None):
+                 table: Optional[list[list[str]]] = None) -> None:
+        """
+        Initializes an instance of the PolybiusSquare class.
+
+        Args:
+            table (Optional[list[list[str]]]): The Polybius Square table.
+
+        If `table` is not provided, the default table is used.
+        """
         if table is None:
             table = [
-                ['D', 'N', 'K', 'R', 'Y', '4'],
-                ['E', 'A', 'L', 'S', 'Z', '5'],
-                ['B', 'C', 'M', 'T', '0', '6'],
-                ['U', 'F', 'O', 'V', '1', '7'],
-                ['G', 'H', 'P', 'W', '2', '8'],
-                ['I', 'J', 'Q', 'X', '3', '9']
-            ]  # Example table
-        
-        self.table = table
+                ['A', 'B', 'C', 'D', 'E'],
+                ['F', 'G', 'H', 'I', 'K'],
+                ['L', 'M', 'N', 'O', 'P'],
+                ['Q', 'R', 'S', 'T', 'U'],
+                ['V', 'W', 'X', 'Y', 'Z']
+            ] 
+        self._table = table
+        self._char_coords = {
+            char: (i, row.index(char)) for i, row in enumerate(self._table) for char in row
+        }
 
     def encrypt(self, msg: str) -> str:
-        text = ""
-        for c in msg:
-            for i in range(len(self.table)):
-                for j in range(len(self.table[0])):
-                    if c == self.table[i][j]:
-                        text += str(i) + str(j)
-        
-        return text
+        """
+        Encrypts a message using the Polybius Square.
 
+        Args:
+            msg (str): The message to be encrypted.
+
+        Returns:
+            str: The encrypted message.
+
+        Raises:
+            ValueError: If the input message contains invalid characters.
+        """
+        if not isinstance(msg, str):
+            raise ValueError("Input message must be a string.")         
+        msg = msg.upper()
+        return "".join([
+            f"{self._char_coords[c][0]}{self._char_coords[c][1]}" for c in msg if c in self._char_coords
+        ])
+############################################## Optimize decrypt!
     def decrypt(self, msg: str) -> str:
+        """
+        Decrypts a message encrypted with the Polybius Square.
+
+        Args:
+            msg (str): The message to be decrypted.
+
+        Returns:
+            str: The decrypted message.
+
+        Raises:
+            ValueError: If the input message contains invalid characters or has an odd length.
+        """
+        if not isinstance(msg, str):
+            raise ValueError("Input message must be a string.")
         text = ""
-        for i in [msg[i:i+2] for i in range(0, len(msg), 2)]:
-            row, col = i
-            text += self.table[int(row)][int(col)]
+        for i in range(0, len(msg), 2):
+            row, col = msg[i:i+2]
+            text += self._table[int(row)][int(col)]
         
         return text
 
 
 class Vigenere(CryptBase):
     def __init__(self, 
-                 key: Optional[str] = None):
+                 key: Optional[str] = None) -> None:
         if key is None:
-            self.key = "A"  # Key for default Vigenere's table
+            key = "A"
+        self.key = key
         self.matrix = self.generate_vigenere_matrix()
 
     def generate_vigenere_matrix(self) -> list[list[str]]:
@@ -77,6 +211,9 @@ class Vigenere(CryptBase):
         ]
 
     def encrypt(self, msg: str) -> str:
+        if not isinstance(msg, str):
+            raise ValueError("Input message must be a string.")
+        msg = msg.upper()
         ind_msg = [self.matrix[0].index(c) for c in msg]
         ind_key = [self.matrix[0].index(c) for c in self.key]
         adjusted_ind = [ind_key[i % len(ind_key)] for i in range(len(ind_msg))]
@@ -87,6 +224,9 @@ class Vigenere(CryptBase):
         )
 
     def decrypt(self, msg: str) -> str:
+        if not isinstance(msg, str):
+            raise ValueError("Input message must be a string.")
+        msg = msg.upper()
         ind_key = [self.matrix[0].index(c) for c in self.key]
         adjusted_ind = [ind_key[i % len(ind_key)] for i in range(len(msg))]
         
@@ -95,12 +235,12 @@ class Vigenere(CryptBase):
             for i, c in enumerate(msg)
         )
 ####################################################################
-FIX BIGRAMS! 
+#FIX BIGRAMS! ДОБАВИТЬ СМЕНУ ЯЗЫКОВ, УКАЗАНИЕ РАЗМЕРОВ И ТД!!Ё"!№
 ####################################################################
 class Playfer(CryptBase):
     def __init__(self,
                  key: Optional[str] = None) -> None:         
-        self.alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"  # i = j, j = i
+        self.alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
         self.size = (5, 5)
         self.key = key or ""
         self.matrix = self.generate_matrix(self.key)
@@ -135,7 +275,9 @@ class Playfer(CryptBase):
         return self.matrix[row1][col1] + self.matrix[row2][col2]
         
     def encrypt(self, msg: str) -> str:
-        msg = msg.replace(' ', '_')
+        if not isinstance(msg, str):
+            raise ValueError("Input message must be a string.")
+        msg = msg.upper().replace(' ', '_')
         text = ""
         for i in range(0, len(msg), 2):
             char1 = msg[i]
@@ -144,6 +286,9 @@ class Playfer(CryptBase):
         return text
 
     def decrypt(self, msg: str) -> str:
+        if not isinstance(msg, str):
+            raise ValueError("Input message must be a string.")
+        msg = msg.upper()
         text = ""
         for i in range(0, len(msg), 2):
             char1, char2 = msg[i], msg[i + 1]
