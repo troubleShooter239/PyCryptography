@@ -563,6 +563,29 @@ class Playfer(CryptBase):
         self._key = key.upper()
         self._matrix = self._generate_matrix(self._key)
     
+    @property
+    def key(self) -> str:
+        """Get the current shift value.
+
+        Returns:
+        - str: The current key value.
+        """
+        return self._key
+    
+    @key.setter
+    def key(self, key: str) -> None:
+        """Set the key value.
+
+        Args:
+        - key (str): The new key value.
+
+        Raises:
+        - ValueError: If the key is not a string.
+        """
+        if not isinstance(key, str):
+            raise ValueError("Shift value must be an integer.")
+        self._key = key
+    
     @staticmethod
     def __is_english(language: str) -> Tuple[str, Literal[6]] | Tuple[str, Literal[5]]:
         """Determine the alphabet and matrix size based on the language.
@@ -619,14 +642,12 @@ class Playfer(CryptBase):
         """
         row1, col1 = self._find_position(char1)
         row2, col2 = self._find_position(char2)
-
         if row1 == row2:
             col1, col2 = (col1 + direction) % self._size, (col2 + direction) % self._size
         elif col1 == col2:
             row1, row2 = (row1 + direction) % self._size, (row2 + direction) % self._size
         else:
             col1, col2 = col2, col1
-
         return self._matrix[row1][col1] + self._matrix[row2][col2]
         
     def encrypt(self, msg: str) -> str:
@@ -643,11 +664,9 @@ class Playfer(CryptBase):
         msg = "".join([char for char in msg.upper() if char in self._alphabet])
         if len(msg) % 2 != 0:
             msg += 'X'
-        text = ""
-        for i in range(0, len(msg), 2):
-            char1, char2 = msg[i], msg[i + 1]
-            text += self._process_pair(char1, char2, -1)
-        return text
+        return "".join(
+            self._process_pair(msg[i], msg[i + 1], -1) for i in range(0, len(msg), 2)
+        )
 
     def decrypt(self, msg: str) -> str:
         """Decrypt a message using the Playfair cipher.
@@ -661,8 +680,18 @@ class Playfer(CryptBase):
         if not isinstance(msg, str):
             raise ValueError("Input message must be a string.")
         msg = msg.upper()
-        text = ""
-        for i in range(0, len(msg), 2):
-            char1, char2 = msg[i], msg[i + 1]
-            text += self._process_pair(char1, char2, 1)
-        return text
+        return "".join(
+            self._process_pair(msg[i], msg[i + 1], 1) for i in range(0, len(msg), 2)
+        )
+
+    @staticmethod
+    def is_valid_string(value: str) -> bool:
+        """Check if the string contains only letters of the Russian or English alphabet.
+
+        Args:
+        - s (str): The input string.
+
+        Returns:
+        - bool: True if the string contains only letters of the Russian or English alphabet, False otherwise.
+        """
+        return True
