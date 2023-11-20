@@ -1,21 +1,20 @@
-from typing import Optional, List, Dict, Tuple
-import string
-from crypt_base import CryptBase
+"""Module: Ciphers
 
-eng26_str_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # With j
-eng25_str_upper = "ABCDEFGHIKLMNOPQRSTUVWXYZ"  # Without j
-eng_matrix_upper = [
-    ['A', 'B', 'C', 'D', 'E'],
-    ['F', 'G', 'H', 'I', 'K'],
-    ['L', 'M', 'N', 'O', 'P'],
-    ['Q', 'R', 'S', 'T', 'U'],
-    ['V', 'W', 'X', 'Y', 'Z']
-]
+This module...
+
+Classes:
+
+Public methods:
+"""
+
+from typing import Optional, List, Dict, Tuple
+
+from crypt_base import CryptBase
+from cipher_utils import  eng26_str_upper, eng25_matrix_upper
 
 
 class Caesar(CryptBase):
-    """
-    Implementation of the Caesar cipher.
+    """Implementation of the Caesar cipher.
 
     Attributes:
         _shift (int): The shift value used for encryption and decryption.
@@ -53,8 +52,7 @@ class Caesar(CryptBase):
     """
     def __init__(self, 
                  shift: Optional[int] = 0) -> None:
-        """
-        Initializes an instance of the Caesar class.
+        """Initializes an instance of the Caesar class.
 
         Args:
             shift (int): The initial shift value.
@@ -65,8 +63,7 @@ class Caesar(CryptBase):
     
     @property
     def shift(self) -> int:
-        """
-        Get the current shift value.
+        """Get the current shift value.
 
         Returns:
             int: The current shift value.
@@ -75,8 +72,7 @@ class Caesar(CryptBase):
     
     @shift.setter
     def shift(self, value: int) -> None:
-        """
-        Set the shift value.
+        """Set the shift value.
 
         Args:
             value (int): The new shift value.
@@ -89,8 +85,7 @@ class Caesar(CryptBase):
         self._shift = value
     
     def encrypt(self, msg: str) -> str:
-        """
-        Encrypts a message using the Caesar cipher.
+        """Encrypts a message using the Caesar cipher.
 
         Args:
             msg (str): The message to be encrypted.
@@ -110,8 +105,7 @@ class Caesar(CryptBase):
         )
 
     def decrypt(self, msg: str) -> str:
-        """
-        Decrypts a message encrypted with the Caesar cipher.
+        """Decrypts a message encrypted with the Caesar cipher.
 
         Args:
             msg (str): The message to be decrypted.
@@ -132,22 +126,78 @@ class Caesar(CryptBase):
 
 
 class PolybiusSquare(CryptBase):
+    """Implementation of the Polybius Square cipher.
+
+    Attributes:
+        _table (List[List[str]]): The Polybius Square table.
+        _coords (Dict[str, Tuple[int, int]]): Dictionary mapping characters to their coordinates.
+
+    Methods:
+        __init__(self, table: Optional[List[List[str]]] = eng25_matrix_upper) -> None:
+            Initializes an instance of the PolybiusSquare class.
+
+            Args:
+                table (Optional[List[List[str]]]): The Polybius Square table.
+
+        _get_coords(self) -> Dict[str, Tuple[int, int]]:
+            Get the coordinates of characters in the Polybius Square table.
+
+            Returns:
+                Dict[str, Tuple[int, int]]: Dictionary mapping characters to their coordinates.
+
+        @property
+        table(self) -> List[List[str]]:
+            Get the current table value.
+
+            Returns:
+                List[List[str]]: The current table value.
+
+        @table.setter
+        table(self, table: List[List[str]]) -> None:
+            Set the table value.
+
+            Args:
+                table (List[List[str]]): The new table value.
+
+            Raises:
+                ValueError: If the table is not a list of lists of strings.
+
+        encrypt(self, msg: str) -> str:
+            Encrypts a message using the Polybius Square.
+
+            Args:
+                msg (str): The message to be encrypted.
+
+            Returns:
+                str: The encrypted message.
+
+            Raises:
+                ValueError: If the input message contains invalid characters.
+
+        decrypt(self, msg: str) -> str:
+            Decrypts a message encrypted with the Polybius Square.
+
+            Args:
+                msg (str): The message to be decrypted.
+
+            Returns:
+                str: The decrypted message.
+
+            Raises:
+                ValueError: If the input message contains invalid characters or has an odd length.
+    """
     def __init__(self, 
-                 table: Optional[List[List[str]]] = eng_matrix_upper) -> None:
-        """
-        Initializes an instance of the PolybiusSquare class.
+                 table: Optional[List[List[str]]] = eng25_matrix_upper) -> None:
+        """Initializes an instance of the PolybiusSquare class.
 
         Args:
             table (Optional[List[List[str]]]): The Polybius Square table.
-
-        If `table` is not provided, the default table is used.
         """
         self._table = table
         self._coords = self._get_coords()
         
     def _get_coords(self) -> Dict[str, Tuple[int, int]]:
-        """
-        Get the coordinates of characters in the Polybius Square table.
+        """Get the coordinates of characters in the Polybius Square table.
 
         Returns:
             Dict[str, Tuple[int, int]]: Dictionary mapping characters to their coordinates.
@@ -156,8 +206,7 @@ class PolybiusSquare(CryptBase):
     
     @property
     def table(self) -> List[List[str]]:
-        """
-        Get the current table value.
+        """Get the current table value.
 
         Returns:
             List[List[str]]: The current table value.
@@ -166,8 +215,7 @@ class PolybiusSquare(CryptBase):
     
     @table.setter
     def table(self, table: List[List[str]]) -> None:
-        """
-        Set the table value.
+        """Set the table value.
 
         Args:
             table (List[List[str]]): The new table value.
@@ -181,8 +229,7 @@ class PolybiusSquare(CryptBase):
         self._coords = self._get_coords()
 
     def encrypt(self, msg: str) -> str:
-        """
-        Encrypts a message using the Polybius Square.
+        """Encrypts a message using the Polybius Square.
 
         Args:
             msg (str): The message to be encrypted.
@@ -201,8 +248,7 @@ class PolybiusSquare(CryptBase):
         ])
 
     def decrypt(self, msg: str) -> str:
-        """
-        Decrypts a message encrypted with the Polybius Square.
+        """Decrypts a message encrypted with the Polybius Square.
 
         Args:
             msg (str): The message to be decrypted.
@@ -222,16 +268,101 @@ class PolybiusSquare(CryptBase):
 
 ######################################## ADD SHIFT!@!!@
 class Vigenere(CryptBase):
+    """Implementation of the Vigenere cipher.
+
+    Attributes:
+        _key (str): The key for Vigenere encryption.
+        _shift (int): The shift value used for encryption and decryption.
+        _matrix (List[List[str]]): The Vigenere encryption matrix.
+
+    Methods:
+        __init__(self, key: Optional[str] = "A", shift: Optional[int] = 0) -> None:
+            Initializes an instance of the Vigenere class.
+
+            Args:
+                key (Optional[str]): The key for Vigenere encryption.
+
+            If `key` is not provided, a default key "A" is used.
+
+                shift (Optional[int]): The shift value.
+
+            If `shift` is not provided, a default shift value of 0 is used.
+
+        @property
+        key(self) -> str:
+            Get the current key value.
+
+            Returns:
+                str: The current key value.
+
+        @key.setter
+        key(self, key: str) -> None:
+            Set the key value.
+
+            Args:
+                key (str): The new key value.
+
+            Raises:
+                ValueError: If the key is not a string.
+
+        @property
+        shift(self) -> int:
+            Get the current shift value.
+
+            Returns:
+                int: The current shift value.
+
+        @shift.setter
+        shift(self, shift: int) -> None:
+            Set the shift value.
+
+            Args:
+                shift (int): The new shift value.
+
+            Raises:
+                ValueError: If the shift is not an integer.
+
+        generate_matrix(self) -> List[List[str]]:
+            Generates the Vigenere encryption matrix.
+
+            Returns:
+                List[List[str]]: The Vigenere encryption matrix.
+
+        encrypt(self, msg: str) -> str:
+            Encrypts a message using the Vigenere cipher.
+
+            Args:
+                msg (str): The message to be encrypted.
+
+            Returns:
+                str: The encrypted message.
+
+            Raises:
+                ValueError: If the input message is not a string.
+
+        decrypt(self, msg: str) -> str:
+            Decrypts a message encrypted with the Vigenere cipher.
+
+            Args:
+                msg (str): The message to be decrypted.
+
+            Returns:
+                str: The decrypted message.
+
+            Raises:
+                ValueError: If the input message is not a string.
+    """
     def __init__(self, 
                  key: Optional[str] = "A",
                  shift: Optional[int] = 0) -> None:
-        """
-        Initializes an instance of the Vigenere class.
+        """Initializes an instance of the Vigenere class.
 
         Args:
             key (Optional[str]): The key for Vigenere encryption.
 
         If `key` is not provided, a default key "A" is used.
+        
+        If `shift` is not provided, a default shift value of 0 is used.
         """
         self._key = key
         self._shift = shift
@@ -239,8 +370,7 @@ class Vigenere(CryptBase):
         
     @property
     def key(self) -> str:
-        """
-        Get the current key value.
+        """Get the current key value.
 
         Returns:
             str: The current key value.
@@ -249,8 +379,7 @@ class Vigenere(CryptBase):
     
     @key.setter
     def key(self, key: str) -> None:
-        """
-        Set the key value.
+        """Set the key value.
 
         Args:
             key (str): The new key value.
@@ -264,8 +393,7 @@ class Vigenere(CryptBase):
         
     @property
     def shift(self) -> int:
-        """
-        Get the current shift value.
+        """Get the current shift value.
 
         Returns:
             int: The current shift value.
@@ -274,8 +402,7 @@ class Vigenere(CryptBase):
     
     @shift.setter
     def shift(self, shift: int) -> None:
-        """
-        Set the shift value.
+        """Set the shift value.
 
         Args:
             shift (int): The new shift value.
@@ -288,8 +415,7 @@ class Vigenere(CryptBase):
         self._shift = shift
 
     def generate_matrix(self) -> List[List[str]]:
-        """
-        Generates the Vigenere encryption matrix.
+        """Generates the Vigenere encryption matrix.
 
         Returns:
             List[List[str]]: The Vigenere encryption matrix.
@@ -304,8 +430,7 @@ class Vigenere(CryptBase):
         ]
 
     def encrypt(self, msg: str) -> str:
-        """
-        Encrypts a message using the Vigenere cipher.
+        """Encrypts a message using the Vigenere cipher.
 
         Args:
             msg (str): The message to be encrypted.
@@ -325,8 +450,7 @@ class Vigenere(CryptBase):
         return "".join(self._matrix[msg_ind[i]][adj_ind[i]] for i in range(len(msg_ind)))
 
     def decrypt(self, msg: str) -> str:
-        """
-        Decrypts a message encrypted with the Vigenere cipher.
+        """Decrypts a message encrypted with the Vigenere cipher.
 
         Args:
             msg (str): The message to be decrypted.
