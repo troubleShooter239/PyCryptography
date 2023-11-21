@@ -16,6 +16,24 @@ from abc import ABC, abstractmethod
 class CryptBase(ABC):
     """Abtract class for ciphers."""
     
+    @staticmethod
+    def _validate_input_string(value: str) -> str:
+        """Validate that the input value is a string.
+
+        Args:
+        - value (str): The value to validate.
+
+        Raises:
+        - ValueError: If the input value is not a string.
+        
+        Returns:
+        - str: Input string in the uppercase.
+        """
+        if not isinstance(value, str):
+            raise ValueError("Message must be a string.")
+        
+        return value.upper()
+    
     @abstractmethod
     def encrypt(self, msg: str) -> str: 
         """Abstract method for encrypting a message.

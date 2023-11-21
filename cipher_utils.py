@@ -28,6 +28,7 @@ Example:
 """
 
 from typing import Tuple
+import re
 
 digits = "0123456789"
 rus36_str_upper = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ-_."
@@ -50,3 +51,27 @@ def generate_matrix(alphabet: str, cols: int) -> Tuple[Tuple[str]]:
 
 rus36_matrix_upper = generate_matrix(rus36_str_upper, 6)
 eng25_matrix_upper = generate_matrix(eng25_str_upper, 5)
+
+
+def is_valid_rus(value: str) -> bool:
+    """Check if the string contains only letters of the `Russian` alphabet.
+
+    Args:
+    - value (str): The input string.
+
+    Returns:
+    - bool: True if the string contains only letters of the Russian alphabet, False otherwise.
+    """
+    return bool(re.fullmatch("[А-ЯЁ]+", value))
+
+
+def is_valid_eng(value: str) -> bool:
+    """Check if the string contains only letters of the `English` alphabet.
+
+    Args:
+    - value (str): The input string.
+
+    Returns:
+    - bool: True if the string contains only letters of the English alphabet, False otherwise.
+    """
+    return bool(re.fullmatch("[A-Z]+", value))

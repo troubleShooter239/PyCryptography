@@ -6,11 +6,12 @@ Classes:
 
 Public methods:
 """
-
+from calendar import c
 from typing import Literal, Optional, List, Dict, Tuple
 
 from crypt_base import CryptBase
-from cipher_utils import  eng25_str_upper, eng26_str_upper, eng25_matrix_upper, rus36_str_upper
+from cipher_utils import  eng25_str_upper, eng26_str_upper, eng25_matrix_upper, \
+    rus36_str_upper, is_valid_eng, is_valid_rus
 
 
 class Caesar(CryptBase):
@@ -59,6 +60,7 @@ class Caesar(CryptBase):
         """
         if not isinstance(shift, int):
             raise ValueError("Shift must be of type int!")
+        
         self._shift = shift
     
     @property
@@ -82,6 +84,7 @@ class Caesar(CryptBase):
         """
         if not isinstance(value, int):
             raise ValueError("Shift value must be of type int.")
+        
         self._shift = value
     
     def encrypt(self, msg: str) -> str:
@@ -96,10 +99,9 @@ class Caesar(CryptBase):
         Raises:
         - ValueError: If the input message is not a string.
         """
-        if not isinstance(msg, str):
-            raise ValueError("Input message must be a string.")
-        msg = msg.upper()
-        return ''.join(
+        msg = super()._validate_input_string(msg)
+        
+        return "".join(
             chr((ord(char) + self._shift - ord('A')) % 26 + ord('A')) 
             if 'A' <= char <= 'Z' else char for char in msg
         )
@@ -116,10 +118,9 @@ class Caesar(CryptBase):
         Raises:
         - ValueError: If the input message is not a string.
         """
-        if not isinstance(msg, str):
-            raise ValueError("Input message must be a string.")
-        msg = msg.upper()
-        return ''.join(
+        msg = super()._validate_input_string(msg)
+
+        return "".join(
             chr((ord(char) - self._shift - ord('A')) % 26 + ord('A')) 
             if 'A' <= char <= 'Z' else char for char in msg
         )
@@ -223,8 +224,10 @@ class PolybiusSquare(CryptBase):
         Raises:
         - ValueError: If the table is not a list of lists of strings.
         """
-        if not all(isinstance(row, list) and all(isinstance(c, str) for c in row) for row in table):
+        if not all(isinstance(row, list) and 
+                   all(isinstance(c, str) for c in row) for row in table):
             raise ValueError("Table value must be a list of lists of strings.")
+        
         self._table = table
         self._coords = self._get_coords()
 
@@ -240,9 +243,8 @@ class PolybiusSquare(CryptBase):
         Raises:
         - ValueError: If the input message contains invalid characters.
         """
-        if not isinstance(msg, str):
-            raise ValueError("Input message must be a string.")         
-        msg = msg.upper()
+        msg = super()._validate_input_string(msg)
+        
         return "".join([
             f"{self._coords[c][0]}{self._coords[c][1]}" for c in msg if c in self._coords
         ])
@@ -259,11 +261,14 @@ class PolybiusSquare(CryptBase):
         Raises:
         - ValueError: If the input message contains invalid characters or has an odd length.
         """
-        if not isinstance(msg, str):
-            raise ValueError("Input message must be a string.")
+        msg = super()._validate_input_string(msg)
+        
         if len(msg) % 2 != 0:
             raise ValueError("Input message must have an even length.")
-        return "".join(self._table[int(msg[i])][int(msg[i+1])] for i in range(0, len(msg), 2))
+        
+        return "".join(
+            self._table[int(msg[i])][int(msg[i+1])] for i in range(0, len(msg), 2)
+        )
 
 
 class Vigenere(CryptBase):
@@ -369,10 +374,9 @@ class Vigenere(CryptBase):
         """
         self._key = key
         self._shift = shift
-        self._alphabet = None
-        self._shift_alphabet()
+        self._alphabet = self._shift_alphabet()
         self._matrix = self._generate_matrix()
-        
+
     @property
     def key(self) -> str:
         """Get the current key value.
@@ -394,6 +398,7 @@ class Vigenere(CryptBase):
         """
         if not isinstance(key, str):
             raise ValueError("Key value must be a list of lists of strings.")
+        
         self._key = key
         
     @property
@@ -417,14 +422,15 @@ class Vigenere(CryptBase):
         """
         if not isinstance(shift, int):
             raise ValueError("Shift value must be an integer.")
-        self._shift = shift
-        self._shift_alphabet()
         
-    def _shift_alphabet(self) -> None:
+        self._shift = shift
+        self._alphabet = self._shift_alphabet()
+        
+    def _shift_alphabet(self) -> str:
         """Shifts the alphabet by the specified number of positions."""
-        self._alphabet = eng26_str_upper[self._shift:] + eng26_str_upper[:self._shift]
+        return eng26_str_upper[self._shift:] + eng26_str_upper[:self._shift]
 
-    def _generate_matrix(self) -> List[List[str]]:
+    def _generate_matrix(self):
         """Generates the Vigenere encryption matrix.
 
         Returns:
@@ -433,7 +439,8 @@ class Vigenere(CryptBase):
         unique_chars = sorted(
             set(self._key + self._alphabet), 
             key=lambda x: self._key.index(x) if x in self._key else self._alphabet.index(x)
-        )
+        )   
+        
         return [
             list(unique_chars[-i:] + unique_chars[:-i]) for i in range(len(unique_chars), 0, -1)
         ]
@@ -450,12 +457,12 @@ class Vigenere(CryptBase):
         Raises:
         - ValueError: If the input message is not a string.
         """
-        if not isinstance(msg, str):
-            raise ValueError("Input message must be a string.")
-        msg = msg.upper()
+        msg = super()._validate_input_string(msg)
+        
         msg_ind = [self._matrix[0].index(c) for c in msg]
         key_ind = [self._matrix[0].index(c) for c in self.key]
         adj_ind = [key_ind[i % len(key_ind)] for i in range(len(msg_ind))]
+        
         return "".join(self._matrix[msg_ind[i]][adj_ind[i]] for i in range(len(msg_ind)))
 
     def decrypt(self, msg: str) -> str:
@@ -470,11 +477,11 @@ class Vigenere(CryptBase):
         Raises:
         - ValueError: If the input message is not a string.
         """
-        if not isinstance(msg, str):
-            raise ValueError("Input message must be a string.")
-        msg = msg.upper()
+        msg = super()._validate_input_string(msg)
+
         key_ind = [self._matrix[0].index(c) for c in self.key]
         adj_ind = [key_ind[i % len(key_ind)] for i in range(len(msg))]
+        
         return "".join(
             self._matrix[0][self._matrix[adj_ind[i]].index(c)] for i, c in enumerate(msg)
         )
@@ -560,8 +567,15 @@ class Playfer(CryptBase):
         - language: Optional[str]: The language to use (default is "eng" for English).
         """
         self._alphabet, self._size = self.__is_english(language)
-        self._key = key.upper()
-        self._matrix = self._generate_matrix(self._key)
+        key = key.upper()
+        
+        if language == "eng" and not is_valid_eng(key) or\
+            language == "rus" and not is_valid_rus(key):
+            raise ValueError("Language in key is not the selected language!")
+        
+        self._language = language
+        self._key = key
+        self._matrix = self._generate_matrix()
     
     @property
     def key(self) -> str:
@@ -583,7 +597,12 @@ class Playfer(CryptBase):
         - ValueError: If the key is not a string.
         """
         if not isinstance(key, str):
-            raise ValueError("Shift value must be an integer.")
+            raise ValueError("Key must be a string.")
+
+        if self._language == "eng" and not is_valid_eng(key) or\
+            self._language == "rus" and not is_valid_rus(key):
+            raise ValueError("Selected language is not supported!")
+
         self._key = key
     
     @staticmethod
@@ -596,22 +615,23 @@ class Playfer(CryptBase):
         Returns:
         - Tuple[str, Literal[6]] | Tuple[str, Literal[5]]: The alphabet and matrix size.
         """
-        return (rus36_str_upper, 6) if language == "rus" else (eng25_str_upper, 5)
+        if language == "eng":
+            return eng25_str_upper, 5
+        elif language == "rus":
+            return rus36_str_upper, 6
+        else:
+            raise ValueError("Selected language is not supported!")
 
-    def _generate_matrix(self, key: Optional[str] = None) -> List[List[str]]:
+    def _generate_matrix(self) -> List[List[str]]:
         """Generate the Playfair key matrix.
-
-        Args:
-        - key: Optional[str]: The key for the cipher.
 
         Returns:
         - List[List[str]]: The generated key matrix.
         """
-        if key is not None:
-            self._key = key
         key_text = self._key + self._alphabet
-        unique_chars = "".join(sorted(set(key_text), key=key_text.index))
-        return [unique_chars[i:i + self._size] for i in range(0, len(unique_chars), self._size)]
+        unique = "".join(sorted(set(key_text), key=key_text.index))
+        
+        return [unique[i:i + self._size] for i in range(0, len(unique), self._size)]
     
     def _find_position(self, char: str) -> Tuple[int, int]:
         """Find the position of a character in the key matrix.
@@ -642,12 +662,14 @@ class Playfer(CryptBase):
         """
         row1, col1 = self._find_position(char1)
         row2, col2 = self._find_position(char2)
+        
         if row1 == row2:
             col1, col2 = (col1 + direction) % self._size, (col2 + direction) % self._size
         elif col1 == col2:
             row1, row2 = (row1 + direction) % self._size, (row2 + direction) % self._size
         else:
             col1, col2 = col2, col1
+            
         return self._matrix[row1][col1] + self._matrix[row2][col2]
         
     def encrypt(self, msg: str) -> str:
@@ -659,11 +681,12 @@ class Playfer(CryptBase):
         Returns:
         - str: The encrypted message.
         """
-        if not isinstance(msg, str):
-            raise ValueError("Input message must be a string.")
-        msg = "".join([char for char in msg.upper() if char in self._alphabet])
+        msg = super()._validate_input_string(msg)
+        msg = "".join([char for char in msg if char in self._alphabet])
+        
         if len(msg) % 2 != 0:
             msg += 'X'
+        
         return "".join(
             self._process_pair(msg[i], msg[i + 1], -1) for i in range(0, len(msg), 2)
         )
@@ -677,21 +700,8 @@ class Playfer(CryptBase):
         Returns:
         - str: The decrypted message.
         """
-        if not isinstance(msg, str):
-            raise ValueError("Input message must be a string.")
-        msg = msg.upper()
+        msg = super()._validate_input_string(msg)
+        
         return "".join(
             self._process_pair(msg[i], msg[i + 1], 1) for i in range(0, len(msg), 2)
         )
-
-    @staticmethod
-    def is_valid_string(value: str) -> bool:
-        """Check if the string contains only letters of the Russian or English alphabet.
-
-        Args:
-        - s (str): The input string.
-
-        Returns:
-        - bool: True if the string contains only letters of the Russian or English alphabet, False otherwise.
-        """
-        return True
