@@ -6,12 +6,11 @@ Classes:
 
 Public methods:
 """
-from calendar import c
-from typing import Literal, Optional, List, Dict, Tuple
+from typing import Optional, Dict
 
 from crypt_base import CryptBase
-from cipher_utils import  eng25_str_upper, eng26_str_upper, eng25_matrix_upper, \
-    rus36_str_upper, is_valid_eng, is_valid_rus
+from cipher_utils import *
+from crypt_bigrams_base import CryptBigramsBase
 
 
 class Caesar(CryptBase):
@@ -99,7 +98,7 @@ class Caesar(CryptBase):
         Raises:
         - ValueError: If the input message is not a string.
         """
-        msg = super()._validate_input_string(msg)
+        msg = self._validate_input_string(msg)
         
         return "".join(
             chr((ord(char) + self._shift - ord('A')) % 26 + ord('A')) 
@@ -118,7 +117,7 @@ class Caesar(CryptBase):
         Raises:
         - ValueError: If the input message is not a string.
         """
-        msg = super()._validate_input_string(msg)
+        msg = self._validate_input_string(msg)
 
         return "".join(
             chr((ord(char) - self._shift - ord('A')) % 26 + ord('A')) 
@@ -243,7 +242,7 @@ class PolybiusSquare(CryptBase):
         Raises:
         - ValueError: If the input message contains invalid characters.
         """
-        msg = super()._validate_input_string(msg)
+        msg = self._validate_input_string(msg)
         
         return "".join([
             f"{self._coords[c][0]}{self._coords[c][1]}" for c in msg if c in self._coords
@@ -261,7 +260,7 @@ class PolybiusSquare(CryptBase):
         Raises:
         - ValueError: If the input message contains invalid characters or has an odd length.
         """
-        msg = super()._validate_input_string(msg)
+        msg = self._validate_input_string(msg)
         
         if len(msg) % 2 != 0:
             raise ValueError("Input message must have an even length.")
@@ -457,7 +456,7 @@ class Vigenere(CryptBase):
         Raises:
         - ValueError: If the input message is not a string.
         """
-        msg = super()._validate_input_string(msg)
+        msg = self._validate_input_string(msg)
         
         msg_ind = [self._matrix[0].index(c) for c in msg]
         key_ind = [self._matrix[0].index(c) for c in self.key]
@@ -477,7 +476,7 @@ class Vigenere(CryptBase):
         Raises:
         - ValueError: If the input message is not a string.
         """
-        msg = super()._validate_input_string(msg)
+        msg = self._validate_input_string(msg)
 
         key_ind = [self._matrix[0].index(c) for c in self.key]
         adj_ind = [key_ind[i % len(key_ind)] for i in range(len(msg))]
@@ -487,7 +486,7 @@ class Vigenere(CryptBase):
         )
 
 
-class Playfer(CryptBase):
+class Playfer(CryptBigramsBase):
     """Implementation of the `Playfer` cipher.
     
     Attributes:
@@ -566,7 +565,7 @@ class Playfer(CryptBase):
         - key: Optional[str]: The key for the cipher.
         - language: Optional[str]: The language to use (default is "eng" for English).
         """
-        self._alphabet, self._size = self.__is_english(language)
+        self._alphabet, self._size = is_english(language)
         key = key.upper()
         
         if language == "eng" and not is_valid_eng(key) or\
@@ -575,7 +574,7 @@ class Playfer(CryptBase):
         
         self._language = language
         self._key = key
-        self._matrix = self._generate_matrix()
+        self._matrix = generate_matrix_by_key(self._alphabet, self._key, self._key)
     
     @property
     def key(self) -> str:
@@ -604,45 +603,44 @@ class Playfer(CryptBase):
             raise ValueError("Selected language is not supported!")
 
         self._key = key
-    
-    @staticmethod
-    def __is_english(language: str) -> Tuple[str, Literal[6]] | Tuple[str, Literal[5]]:
-        """Determine the alphabet and matrix size based on the language.
+        self._matrix = generate_matrix_by_key(self._alphabet, self._key, self._key)
+        
+    def _process_pair(self, char1: str, char2: str, direction: int) -> str:
+        """Process a pair of characters based on the specified direction.
 
         Args:
-        - language (str): The language to use.
+        - char1 (str): The first character.
+        - char2 (str): The second character.
+        - direction (int): The direction of processing (-1 for encryption, 1 for decryption).
 
         Returns:
-        - Tuple[str, Literal[6]] | Tuple[str, Literal[5]]: The alphabet and matrix size.
+        - str: The processed pair of characters.
         """
-        if language == "eng":
-            return eng25_str_upper, 5
-        elif language == "rus":
-            return rus36_str_upper, 6
-        else:
-            raise ValueError("Selected language is not supported!")
-
-    def _generate_matrix(self) -> List[List[str]]:
-        """Generate the Playfair key matrix.
-
-        Returns:
-        - List[List[str]]: The generated key matrix.
-        """
-        key_text = self._key + self._alphabet
-        unique = "".join(sorted(set(key_text), key=key_text.index))
+        row1, col1 = self._find_position(char1)
+        row2, col2 = self._find_position(char2)
         
-        return [unique[i:i + self._size] for i in range(0, len(unique), self._size)]
+        self._update_coords(row1, row2, col1, col2, direction, self._size)
+                
+        if row1 == row2:
+            col1, col2 = (col1 + direction) % self._size, (col2 + direction) % self._size
+        elif col1 == col2:
+            row1, row2 = (row1 + direction) % self._size, (row2 + direction) % self._size
+        else:
+            col1, col2 = col2, col1
+            
+        return self._matrix[row1][col1] + self._matrix[row2][col2]
     
-    def _find_position(self, char: str) -> Tuple[int, int]:
+    def _find_position(self, char: str, matrix: List[List[str]]) -> Tuple[int, int]:
         """Find the position of a character in the key matrix.
 
         Args:
         - char (str): The character to find.
+        - matrix (List[List[str]]): The matrix for searching the position.
 
         Returns:
         - Tuple[int, int]: The row and column indices of the character.
         """
-        for i, row in enumerate(self._matrix):
+        for i, row in enumerate(matrix):
             try: 
                 return i, row.index(char)
             except ValueError: 
@@ -658,7 +656,7 @@ class Playfer(CryptBase):
         Returns:
         - str: The encrypted message.
         """
-        msg = super()._validate_input_string(msg)
+        msg = self._validate_input_string(msg)
         msg = "".join([char for char in msg if char in self._alphabet])
         
         if len(msg) % 2 != 0:
@@ -677,20 +675,36 @@ class Playfer(CryptBase):
         Returns:
         - str: The decrypted message.
         """
-        msg = super()._validate_input_string(msg)
+        msg = self._validate_input_string(msg)
         
         return "".join(
             self._process_pair(msg[i], msg[i + 1], 1) for i in range(0, len(msg), 2)
         )
         
 
-class TwoSquare(CryptBase):
+class TwoSquare(CryptBigramsBase):
     def __init__(self,
-                 ) -> None:
-        ...
+                 key1: Optional[str] = "",
+                 key2: Optional[str] = "",
+                 language: Optional[str] = "eng") -> None:
+        self._alphabet, self._size = is_english(language)
+        self._key1, self._key2 = key1, key2
+        self._matrix1 = generate_matrix_by_key(self._alphabet, self._size, self._key1)
+        self._matrix2 = generate_matrix_by_key(self._alphabet, self._size, self._key2)
     
-    def encrypt(self, msg: str) -> str:
-        ...
+    def encrypt(self, msg: str) -> str:        
+        msg = self._validate_input_string(msg)
         
+        if len(msg) % 2 != 0:
+            msg += 'X'
+        
+        return "".join(
+            self._proccess_pair(msg[i], msg[i + 1], self._matrix1, self._matrix2, -1, self._size) for i in range(0, len(msg), 2)
+        )
+
     def decrypt(self, msg: str) -> str:
-        ...
+        msg = self._validate_input_string(msg)
+        
+        return "".join(
+            self._proccess_pair(msg[i], msg[i + 1], self._matrix1, self._matrix2, 1, self._size) for i in range(0, len(msg), 2)
+        )

@@ -27,7 +27,7 @@ Example:
     (('A', 'B'), ('C', 'D'), ('E', 'F'))
 """
 
-from typing import Tuple
+from typing import Literal, List, Tuple
 import re
 
 digits = "0123456789"
@@ -37,7 +37,7 @@ eng26_str_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 eng25_str_upper = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
 
 
-def generate_matrix(alphabet: str, cols: int) -> Tuple[Tuple[str]]:
+def generate_matrix_by_cols(alphabet: str, cols: int) -> Tuple[Tuple[str]]:
     """Generate a matrix from the given alphabet with the specified number of columns.
 
     Args:
@@ -49,8 +49,8 @@ def generate_matrix(alphabet: str, cols: int) -> Tuple[Tuple[str]]:
     """
     return tuple(row for row in zip(*[iter(alphabet)] * cols))
 
-rus36_matrix_upper = generate_matrix(rus36_str_upper, 6)
-eng25_matrix_upper = generate_matrix(eng25_str_upper, 5)
+rus36_matrix_upper = generate_matrix_by_cols(rus36_str_upper, 6)
+eng25_matrix_upper = generate_matrix_by_cols(eng25_str_upper, 5)
 
 
 def is_valid_rus(value: str) -> bool:
@@ -75,3 +75,33 @@ def is_valid_eng(value: str) -> bool:
     - bool: True if the string contains only letters of the English alphabet, False otherwise.
     """
     return bool(re.fullmatch("[A-Z]+", value))
+
+
+def is_english(language: str) -> Tuple[str, Literal[6]] | Tuple[str, Literal[5]]:
+        """Determine the alphabet and matrix size based on the language.
+
+        Args:
+        - language (str): The language to use.
+
+        Returns:
+        - Tuple[str, Literal[6]] | Tuple[str, Literal[5]]: The alphabet and matrix size.
+        """
+        if language == "eng":
+            return eng25_str_upper, 5
+        elif language == "rus":
+            return rus36_str_upper, 6
+        else:
+            raise ValueError("Selected language is not supported!")
+
+
+def generate_matrix_by_key(alphabet: str, size: int, key: str) -> List[List[str]]:
+    """Generate the Playfair key matrix.
+
+    Returns:
+    - List[List[str]]: The generated key matrix.
+    """
+    key_text = key + alphabet
+    unique = "".join(sorted(set(key_text), key=key_text.index))
+    
+    return [unique[i:i + size] for i in range(0, len(unique), size)]
+    
