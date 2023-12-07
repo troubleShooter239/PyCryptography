@@ -27,7 +27,7 @@ Example:
     (('A', 'B'), ('C', 'D'), ('E', 'F'))
 """
 
-from typing import Literal, List, Tuple
+from typing import Literal, List, Optional, Tuple
 import re
 
 digits = "0123456789"
@@ -35,6 +35,11 @@ rus36_str_upper = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬ�
 rus33_str_upper = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
 eng26_str_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 eng25_str_upper = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
+
+
+class SupportedLanguages:
+    RUSSIAN = "ru"
+    ENGLISH = "en"
 
 
 def generate_matrix_by_cols(alphabet: str, cols: int) -> Tuple[Tuple[str]]:
@@ -48,9 +53,6 @@ def generate_matrix_by_cols(alphabet: str, cols: int) -> Tuple[Tuple[str]]:
     - Tuple[Tuple[str]]: Matrix of characters.
     """
     return tuple(row for row in zip(*[iter(alphabet)] * cols))
-
-rus36_matrix_upper = generate_matrix_by_cols(rus36_str_upper, 6)
-eng25_matrix_upper = generate_matrix_by_cols(eng25_str_upper, 5)
 
 
 def is_valid_rus(value: str) -> bool:
@@ -77,7 +79,7 @@ def is_valid_eng(value: str) -> bool:
     return bool(re.fullmatch("[A-Z]+", value))
 
 
-def is_english(language: str) -> Tuple[str, Literal[6]] | Tuple[str, Literal[5]]:
+def is_supported_language(language: str, key: str = "") -> Tuple[str, Literal[6]] | Tuple[str, Literal[5]]:
         """Determine the alphabet and matrix size based on the language.
 
         Args:
@@ -86,12 +88,12 @@ def is_english(language: str) -> Tuple[str, Literal[6]] | Tuple[str, Literal[5]]
         Returns:
         - Tuple[str, Literal[6]] | Tuple[str, Literal[5]]: The alphabet and matrix size.
         """
-        if language == "eng":
+        if (language == SupportedLanguages.ENGLISH) and (is_valid_eng(key) or ""):
             return eng25_str_upper, 5
-        elif language == "rus":
+        elif language == SupportedLanguages.RUSSIAN and is_valid_rus(key) or "":
             return rus36_str_upper, 6
-        else:
-            raise ValueError("Selected language is not supported!")
+        
+        raise ValueError("Selected language is not supported!")
 
 
 def generate_matrix_by_key(alphabet: str, size: int, key: str) -> List[List[str]]:

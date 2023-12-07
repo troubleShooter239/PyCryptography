@@ -5,7 +5,7 @@ from crypt_base import CryptBase
 class CryptBigramsBase(CryptBase):
     
     @staticmethod
-    def __find_position(char: str, matrix: List[List[str]]) -> Tuple[int, int]:
+    def _find_position(char: str, matrix: List[List[str]]) -> Tuple[int, int]:
         """Find the position of a character in the key matrix.
 
         Args:
@@ -27,6 +27,19 @@ class CryptBigramsBase(CryptBase):
     def _proccess_pair(char1: str, char2: str, 
                        matrix1: List[List[str]], matrix2: Optional[List[List[str]]],
                        direction: int, size: int) -> str:
+        """Process a pair of characters based on the specified direction.
+
+        Args:
+        - char1 (str): The first character.
+        - char2 (str): The second character.
+        - matrix1 (List[List[str]]): The first matrix.
+        - matrix2 (Optional[List[List[str]]]): The second matrix.
+        - direction (int): Direction (-1 for encrypt, -1 for decrypt)
+        - size (int): Size of the matrix.
+
+        Returns:
+        - str: The processed pair of characters.
+        """
         matrix2 = matrix2 or matrix1
             
         row1, col1 = CryptBigramsBase.__find_position(char1, matrix1)
