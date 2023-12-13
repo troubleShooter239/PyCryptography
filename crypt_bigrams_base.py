@@ -24,7 +24,7 @@ class CryptBigramsBase(CryptBase):
         return -1, -1
             
     @staticmethod
-    def _proccess_pair(char1: str, char2: str, 
+    def _process_pair(char1: str, char2: str, 
                        matrix1: List[List[str]], matrix2: Optional[List[List[str]]],
                        direction: int, size: int) -> str:
         """Process a pair of characters based on the specified direction.

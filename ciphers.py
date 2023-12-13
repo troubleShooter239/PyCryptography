@@ -6,7 +6,7 @@ Classes:
 
 Public methods:
 """
-from typing import Optional, Dict, Tuple
+from typing import Optional
 
 from crypt_base import CryptBase
 from crypt_bigrams_base import CryptBigramsBase
@@ -142,7 +142,7 @@ class Caesar(CryptBase):
         text = self._validate_input_string(text)
         return self.__apply_cipher(text, False)
     
-
+# TODO: Refactor that code >>>
 class PolybiusSquare(CryptBase):
     """Implementation of the `Polybius Square` cipher.
 
@@ -211,17 +211,10 @@ class PolybiusSquare(CryptBase):
         Args:
         - table (Optional[List[List[str]]]): The Polybius Square table.
         """
+        super().__init__(language)
         self.__alphabet, self.__size = is_supported_language(language)
         self.__table = generate_matrix_by_cols(self.__alphabet, self.__size)
-        self.__coords = self.__get_coords()
-        
-    def __get_coords(self) -> Dict[str, Tuple[int, int]]:
-        """Get the coordinates of characters in the Polybius Square table.
-
-        Returns:
-        - Dict[str, Tuple[int, int]]: Dictionary mapping characters to their coordinates.
-        """
-        return {char: (i, row.index(char)) for i, row in enumerate(self.__table) for char in row}
+        self.__coords = {c: (i, row.index(c)) for i, row in enumerate(self.__table) for c in row}
 
     def encrypt(self, text: str) -> str:
         """Encrypts a message using the Polybius Square.
@@ -236,10 +229,7 @@ class PolybiusSquare(CryptBase):
         - ValueError: If the input message contains invalid characters.
         """
         text = self._validate_input_string(text)
-        
-        return "".join([
-            f"{self.__coords[c][0]}{self.__coords[c][1]}" for c in text if c in self.__coords
-        ])
+        return "".join([f"{self.__coords[c][0]}{self.__coords[c][1]}" for c in text if c in self.__coords])
 
     def decrypt(self, text: str) -> str:
         """Decrypts a message encrypted with the Polybius Square.
@@ -258,9 +248,7 @@ class PolybiusSquare(CryptBase):
         if len(text) % 2 != 0:
             raise ValueError("Input message must have an even length.")
         
-        return "".join(
-            self.__table[int(text[i])][int(text[i+1])] for i in range(0, len(text), 2)
-        )
+        return "".join(self.__table[int(text[i])][int(text[i+1])] for i in range(0, len(text), 2))
 
 
 class Vigenere(CryptBase):
@@ -605,7 +593,7 @@ class Playfer(CryptBigramsBase):
             text += 'X'
         
         return "".join(
-            self._proccess_pair(text[i], text[i + 1], self._matrix, None, -1, self._size) 
+            self._process_pair(text[i], text[i + 1], self._matrix, None, -1, self._size) 
             for i in range(0, len(text), 2)
         )
 
@@ -621,7 +609,7 @@ class Playfer(CryptBigramsBase):
         text = self._validate_input_string(text)
         
         return "".join(
-            self._proccess_pair(text[i], text[i + 1], self._matrix, None, 1, self._size) 
+            self._process_pair(text[i], text[i + 1], self._matrix, None, 1, self._size) 
             for i in range(0, len(text), 2)
         )
         

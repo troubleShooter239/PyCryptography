@@ -27,7 +27,7 @@ Example:
     (('A', 'B'), ('C', 'D'), ('E', 'F'))
 """
 
-from typing import Literal, List, Optional, Tuple
+from typing import Literal, List, Tuple
 import re
 
 digits = "0123456789"
@@ -40,6 +40,12 @@ eng25_str_upper = "ABCDEFGHIKLMNOPQRSTUVWXYZ"
 class SupportedLanguages:
     RUSSIAN = "ru"
     ENGLISH = "en"
+
+    @staticmethod
+    def is_supported(language: str) -> bool:
+        if language not in [getattr(SupportedLanguages, attr) for attr in dir(SupportedLanguages) if isinstance(getattr(SupportedLanguages, attr), str)]:
+            return False
+        return True
 
 
 def generate_matrix_by_cols(alphabet: str, cols: int) -> Tuple[Tuple[str]]:

@@ -12,14 +12,42 @@ Public methods:
 
 from abc import ABC, abstractmethod
 
+from utils import SupportedLanguages
+
 
 class CryptBase(ABC):
     """Abstract class for ciphers."""
     def __init__(self, language: str) -> None:
-        if not isinstance(language, str):
-            raise ValueError("Language value must be of type str.")
-        self._language = language
+        self.__is_valid_language(language)
+        self.__language = language
+
+    @staticmethod
+    def __is_valid_language(language: str) -> None:
+        if not isinstance(language, str) and not SupportedLanguages.is_supported(language):
+            raise ValueError("Not supported language.")
+
+    @property
+    def language(self) -> str:
+        """Get the current language value.
+
+        Returns:
+        - str: The current language value.
+        """
+        return self.__language
     
+    @language.setter
+    def language(self, language: str) -> None:
+        """Set the language value.
+
+        Args:
+        - language (str): The new language value.
+
+        Raises:
+        - ValueError: If the language is not supported.
+        """
+        self.__is_valid_language(language)
+        self.__language = language
+
     @abstractmethod
     def encrypt(self, text: str) -> str: 
         """Abstract method for encrypting a message.
@@ -43,7 +71,7 @@ class CryptBase(ABC):
         - str: The decrypted message.
         """
         pass
-    
+
     @staticmethod
     def _validate_input_string(value: str) -> str:
         """Validate that the input value is a string.
