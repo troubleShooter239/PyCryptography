@@ -6,8 +6,8 @@ Classes:
 - CryptBase (ABC): Abstract base class for ciphers.
 
 Public methods:
-- encrypt(self, msg: str) -> str: Abstract method for encrypting a message.
-- decrypt(self, msg: str) -> str: Abstract method for decrypting a message.
+- encrypt(self, text: str) -> str: Abstract method for encrypting a message.
+- decrypt(self, text: str) -> str: Abstract method for decrypting a message.
 """
 
 from abc import ABC, abstractmethod
@@ -15,13 +15,17 @@ from abc import ABC, abstractmethod
 
 class CryptBase(ABC):
     """Abstract class for ciphers."""
+    def __init__(self, language: str) -> None:
+        if not isinstance(language, str):
+            raise ValueError("Language value must be of type str.")
+        self._language = language
     
     @abstractmethod
-    def encrypt(self, msg: str) -> str: 
+    def encrypt(self, text: str) -> str: 
         """Abstract method for encrypting a message.
         
         Args:
-        - msg (str): The message to be encrypted.
+        - text (str): The message to be encrypted.
         
         Returns:
         - str: The encrypted message.
@@ -29,11 +33,11 @@ class CryptBase(ABC):
         pass
     
     @abstractmethod
-    def decrypt(self, msg: str) -> str:
+    def decrypt(self, text: str) -> str:
         """Abstract method for decrypting a message.
         
         Args:
-        - msg (str): The message to be decrypted.
+        - text (str): The message to be decrypted.
         
         Returns:
         - str: The decrypted message.

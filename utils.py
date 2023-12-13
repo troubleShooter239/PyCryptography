@@ -1,4 +1,4 @@
-"""Module: Cipher Utils
+"""Module: Utils
 
 This module provides utilities for working with ciphers, including functions 
 for generating matrices from different alphabets.

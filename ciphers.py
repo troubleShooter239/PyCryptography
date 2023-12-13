@@ -6,14 +6,15 @@ Classes:
 
 Public methods:
 """
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple
 
 from crypt_base import CryptBase
-from cipher_utils import *
 from crypt_bigrams_base import CryptBigramsBase
+from utils import SupportedLanguages, is_supported_language, generate_matrix_by_cols, generate_matrix_by_key, \
+    eng25_str_upper
 
 
-class Caesar(CryptBase):  # TODO: Add support for russian language
+class Caesar(CryptBase):
     """Implementation of the `Caesar` cipher.
 
     Attributes:
@@ -26,11 +27,11 @@ class Caesar(CryptBase):  # TODO: Add support for russian language
             Raises:
                 ValueError: If the input shift is not a int.
 
-        `encrypt(self, msg: str)` -> str:
+        `encrypt(self, text: str)` -> str:
             Encrypts a message using the Caesar cipher.
 
             Args:
-                msg (str): The message to be encrypted.
+                text (str): The message to be encrypted.
 
             Returns:
                 str: The encrypted message.
@@ -38,11 +39,11 @@ class Caesar(CryptBase):  # TODO: Add support for russian language
             Raises:
                 ValueError: If the input message is not a string.
 
-        `decrypt(self, msg: str)` -> str:
+        `decrypt(self, text: str)` -> str:
             Decrypts a message encrypted with the Caesar cipher.
 
             Args:
-                msg (str): The message to be decrypted.
+                text (str): The message to be decrypted.
 
             Returns:
                 str: The decrypted message.
@@ -50,18 +51,30 @@ class Caesar(CryptBase):  # TODO: Add support for russian language
             Raises:
                 ValueError: If the input message is not a string.
     """
-    def __init__(self, 
-                 shift: Optional[int] = 0) -> None:
+    def __init__(self,
+                 shift: int = 0,
+                 language: str = SupportedLanguages.ENGLISH) -> None:
         """Initializes an instance of the Caesar class.
 
         Args:
         - shift (int): The initial shift value.
+        - language (str): The supported language.
         """
+        super().__init__(language)
+
+        if self._language == SupportedLanguages.ENGLISH:
+            self.__size = 26
+            self.__start = ord('A')
+        else:
+            self.__size = 33
+            self.__start = ord('А')
+        self.__end = self.__start + self.__size
+
         if not isinstance(shift, int):
-            raise ValueError("Shift must be of type int!")
+            raise ValueError("Shift must be of type int.")
         
         self.__shift = shift
-    
+
     @property
     def shift(self) -> int:
         """Get the current shift value.
@@ -85,12 +98,25 @@ class Caesar(CryptBase):  # TODO: Add support for russian language
             raise ValueError("Shift value must be of type int.")
         
         self.__shift = value
-    
-    def encrypt(self, msg: str) -> str:
+
+    def __apply_cipher(self, text: str, is_encryption: bool) -> str:
+        """Applies the Caesar cipher to the given text.
+
+        Args:
+        - text (str): The message to be encrypted or decrypted.
+        - direction (bool): The direction of the operation (True for encryption, False for decryption).
+
+        Returns:
+        - str: The result of the encryption or decryption.
+        """
+        s = self.__shift if is_encryption else -self.__shift
+        return "".join(chr((ord(c) + s - self.__start) % self.__size + self.__start) if self.__start <= ord(c) <= self.__end else c for c in text)
+
+    def encrypt(self, text: str) -> str:
         """Encrypts a message using the Caesar cipher.
 
         Args:
-        - msg (str): The message to be encrypted.
+        - text (str): The message to be encrypted.
 
         Returns:
         - str: The encrypted message.
@@ -98,18 +124,14 @@ class Caesar(CryptBase):  # TODO: Add support for russian language
         Raises:
         - ValueError: If the input message is not a string.
         """
-        msg = self._validate_input_string(msg)
-        
-        return "".join(
-            chr((ord(char) + self.__shift - ord('A')) % 26 + ord('A')) 
-            if 'A' <= char <= 'Z' else char for char in msg
-        )
+        text = self._validate_input_string(text)
+        return self.__apply_cipher(text, True)
 
-    def decrypt(self, msg: str) -> str:
+    def decrypt(self, text: str) -> str:
         """Decrypts a message encrypted with the Caesar cipher.
 
         Args:
-        - msg (str): The message to be decrypted.
+        - text (str): The message to be decrypted.
 
         Returns:
         - str: The decrypted message.
@@ -117,13 +139,9 @@ class Caesar(CryptBase):  # TODO: Add support for russian language
         Raises:
         - ValueError: If the input message is not a string.
         """
-        msg = self._validate_input_string(msg)
-
-        return "".join(
-            chr((ord(char) - self.__shift - ord('A')) % 26 + ord('A')) 
-            if 'A' <= char <= 'Z' else char for char in msg
-        )
-
+        text = self._validate_input_string(text)
+        return self.__apply_cipher(text, False)
+    
 
 class PolybiusSquare(CryptBase):
     """Implementation of the `Polybius Square` cipher.
@@ -162,11 +180,11 @@ class PolybiusSquare(CryptBase):
             Raises:
                 ValueError: If the table is not a list of lists of strings.
 
-        `encrypt(self, msg: str)` -> str:
+        `encrypt(self, text: str)` -> str:
             Encrypts a message using the Polybius Square.
 
             Args:
-                msg (str): The message to be encrypted.
+                text (str): The message to be encrypted.
 
             Returns:
                 str: The encrypted message.
@@ -174,11 +192,11 @@ class PolybiusSquare(CryptBase):
             Raises:
                 ValueError: If the input message contains invalid characters.
 
-        `decrypt(self, msg: str)` -> str:
+        `decrypt(self, text: str)` -> str:
             Decrypts a message encrypted with the Polybius Square.
 
             Args:
-                msg (str): The message to be decrypted.
+                text (str): The message to be decrypted.
 
             Returns:
                 str: The decrypted message.
@@ -205,11 +223,11 @@ class PolybiusSquare(CryptBase):
         """
         return {char: (i, row.index(char)) for i, row in enumerate(self.__table) for char in row}
 
-    def encrypt(self, msg: str) -> str:
+    def encrypt(self, text: str) -> str:
         """Encrypts a message using the Polybius Square.
 
         Args:
-        - msg (str): The message to be encrypted.
+        - text (str): The message to be encrypted.
 
         Returns:
         - str: The encrypted message.
@@ -217,17 +235,17 @@ class PolybiusSquare(CryptBase):
         Raises:
         - ValueError: If the input message contains invalid characters.
         """
-        msg = self._validate_input_string(msg)
+        text = self._validate_input_string(text)
         
         return "".join([
-            f"{self.__coords[c][0]}{self.__coords[c][1]}" for c in msg if c in self.__coords
+            f"{self.__coords[c][0]}{self.__coords[c][1]}" for c in text if c in self.__coords
         ])
 
-    def decrypt(self, msg: str) -> str:
+    def decrypt(self, text: str) -> str:
         """Decrypts a message encrypted with the Polybius Square.
 
         Args:
-        - msg (str): The message to be decrypted.
+        - text (str): The message to be decrypted.
 
         Returns:
         - str: The decrypted message.
@@ -235,13 +253,13 @@ class PolybiusSquare(CryptBase):
         Raises:
         - ValueError: If the input message contains invalid characters or has an odd length.
         """
-        msg = self._validate_input_string(msg)
+        text = self._validate_input_string(text)
         
-        if len(msg) % 2 != 0:
+        if len(text) % 2 != 0:
             raise ValueError("Input message must have an even length.")
         
         return "".join(
-            self.__table[int(msg[i])][int(msg[i+1])] for i in range(0, len(msg), 2)
+            self.__table[int(text[i])][int(text[i+1])] for i in range(0, len(text), 2)
         )
 
 
@@ -310,11 +328,11 @@ class Vigenere(CryptBase):
             Returns:
                 List[List[str]]: The Vigenere encryption matrix.
 
-        `encrypt(self, msg: str)` -> str:
+        `encrypt(self, text: str)` -> str:
             Encrypts a message using the Vigenere cipher.
 
             Args:
-                msg (str): The message to be encrypted.
+                text (str): The message to be encrypted.
 
             Returns:
                 str: The encrypted message.
@@ -322,11 +340,11 @@ class Vigenere(CryptBase):
             Raises:
                 ValueError: If the input message is not a string.
 
-        `decrypt(self, msg: str)` -> str:
+        `decrypt(self, text: str)` -> str:
             Decrypts a message encrypted with the Vigenere cipher.
 
             Args:
-                msg (str): The message to be decrypted.
+                text (str): The message to be decrypted.
 
             Returns:
                 str: The decrypted message.
@@ -421,11 +439,11 @@ class Vigenere(CryptBase):
             list(unique_chars[-i:] + unique_chars[:-i]) for i in range(len(unique_chars), 0, -1)
         ]
 
-    def encrypt(self, msg: str) -> str:
+    def encrypt(self, text: str) -> str:
         """Encrypts a message using the Vigenere cipher.
 
         Args:
-        - msg (str): The message to be encrypted.
+        - text (str): The message to be encrypted.
 
         Returns:
         - str: The encrypted message.
@@ -433,19 +451,19 @@ class Vigenere(CryptBase):
         Raises:
         - ValueError: If the input message is not a string.
         """
-        msg = self._validate_input_string(msg)
+        text = self._validate_input_string(text)
         
-        msg_ind = [self.__matrix[0].index(c) for c in msg]
+        text_ind = [self.__matrix[0].index(c) for c in text]
         key_ind = [self.__matrix[0].index(c) for c in self.__key]
-        adj_ind = [key_ind[i % len(key_ind)] for i in range(len(msg_ind))]
+        adj_ind = [key_ind[i % len(key_ind)] for i in range(len(text_ind))]
         
-        return "".join(self.__matrix[msg_ind[i]][adj_ind[i]] for i in range(len(msg_ind)))
+        return "".join(self.__matrix[text_ind[i]][adj_ind[i]] for i in range(len(text_ind)))
 
-    def decrypt(self, msg: str) -> str:
+    def decrypt(self, text: str) -> str:
         """Decrypts a message encrypted with the Vigenere cipher.
 
         Args:
-        - msg (str): The message to be decrypted.
+        - text (str): The message to be decrypted.
 
         Returns:
         - str: The decrypted message.
@@ -453,13 +471,13 @@ class Vigenere(CryptBase):
         Raises:
         - ValueError: If the input message is not a string.
         """
-        msg = self._validate_input_string(msg)
+        text = self._validate_input_string(text)
 
         key_ind = [self.__matrix[0].index(c) for c in self.__key]
-        adj_ind = [key_ind[i % len(key_ind)] for i in range(len(msg))]
+        adj_ind = [key_ind[i % len(key_ind)] for i in range(len(text))]
         
         return "".join(
-            self.__matrix[0][self.__matrix[adj_ind[i]].index(c)] for i, c in enumerate(msg)
+            self.__matrix[0][self.__matrix[adj_ind[i]].index(c)] for i, c in enumerate(text)
         )
 
 
@@ -509,11 +527,11 @@ class Playfer(CryptBigramsBase):
             Returns:
                 str: The processed pair of characters.
 
-        `encrypt(self, msg: str)` -> str:
+        `encrypt(self, text: str)` -> str:
             Encrypt a message using the Playfair cipher.
 
             Args:
-                msg (str): The message to encrypt.
+                text (str): The message to encrypt.
 
             Returns:
                 str: The encrypted message.
@@ -521,11 +539,11 @@ class Playfer(CryptBigramsBase):
             Raises:
                 ValueError: If the input message is not a string.
 
-        `decrypt(self, msg: str)` -> str:
+        `decrypt(self, text: str)` -> str:
             Decrypt a message using the Playfair cipher.
 
             Args:
-                msg (str): The message to decrypt.
+                text (str): The message to decrypt.
 
             Returns:
                 str: The decrypted message.
@@ -571,40 +589,40 @@ class Playfer(CryptBigramsBase):
         self.__key = key.upper()
         self.__matrix = generate_matrix_by_key(self.__alphabet, self.__size, self.__key)
         
-    def encrypt(self, msg: str) -> str:
+    def encrypt(self, text: str) -> str:
         """Encrypt a message using the Playfair cipher.
 
         Args:
-        - msg (str): The message to encrypt.
+        - text (str): The message to encrypt.
 
         Returns:
         - str: The encrypted message.
         """
-        msg = self._validate_input_string(msg)
-        msg = "".join([char for char in msg if char in self._alphabet])
+        text = self._validate_input_string(text)
+        text = "".join([char for char in text if char in self._alphabet])
         
-        if len(msg) % 2 != 0:
-            msg += 'X'
+        if len(text) % 2 != 0:
+            text += 'X'
         
         return "".join(
-            self._proccess_pair(msg[i], msg[i + 1], self._matrix, None, -1, self._size) 
-            for i in range(0, len(msg), 2)
+            self._proccess_pair(text[i], text[i + 1], self._matrix, None, -1, self._size) 
+            for i in range(0, len(text), 2)
         )
 
-    def decrypt(self, msg: str) -> str:
+    def decrypt(self, text: str) -> str:
         """Decrypt a message using the Playfair cipher.
 
         Args:
-        - msg (str): The message to decrypt.
+        - text (str): The message to decrypt.
 
         Returns:
         - str: The decrypted message.
         """
-        msg = self._validate_input_string(msg)
+        text = self._validate_input_string(text)
         
         return "".join(
-            self._proccess_pair(msg[i], msg[i + 1], self._matrix, None, 1, self._size) 
-            for i in range(0, len(msg), 2)
+            self._proccess_pair(text[i], text[i + 1], self._matrix, None, 1, self._size) 
+            for i in range(0, len(text), 2)
         )
         
 
@@ -618,16 +636,16 @@ class TwoSquare(CryptBigramsBase):
         self._matrix1 = generate_matrix_by_key(self._alphabet, self._size, self._key1)
         self._matrix2 = generate_matrix_by_key(self._alphabet, self._size, self._key2)
     
-    def encrypt(self, msg: str) -> str:        
-        msg = self._validate_input_string(msg)
+    def encrypt(self, text: str) -> str:        
+        text = self._validate_input_string(text)
         
-        if len(msg) % 2 != 0:
-            msg += 'X'
+        if len(text) % 2 != 0:
+            text += 'X'
         
         text = ""
-        for i in range(0, len(msg), 2):
-            pos1 = self._find_position(msg[i], self._matrix1)
-            pos2 = self._find_position(msg[i + 1], self._matrix2)
+        for i in range(0, len(text), 2):
+            pos1 = self._find_position(text[i], self._matrix1)
+            pos2 = self._find_position(text[i + 1], self._matrix2)
             
             if pos1[0] != pos2[0]:
                 cipher1 = self._matrix1[pos2[0]][pos1[1]]
@@ -640,13 +658,13 @@ class TwoSquare(CryptBigramsBase):
                 
         return text
 
-    def decrypt(self, msg: str) -> str:
-        msg = self._validate_input_string(msg)
+    def decrypt(self, text: str) -> str:
+        text = self._validate_input_string(text)
 
         text = ""
-        for i in range(0, len(msg), 2):
-            pos1 = self._find_position(msg[i], self._matrix1)
-            pos2 = self._find_position(msg[i + 1], self._matrix2)
+        for i in range(0, len(text), 2):
+            pos1 = self._find_position(text[i], self._matrix1)
+            pos2 = self._find_position(text[i + 1], self._matrix2)
 
             if pos1[0] != pos2[0]:
                 decipher1 = self._matrix1[pos2[0]][pos1[1]]
